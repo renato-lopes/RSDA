@@ -1,6 +1,7 @@
 from torchvision import transforms
 from torch.utils.data import Dataset
 from PIL import Image
+import os
 
 def image_train(resize_size=256, crop_size=224, alexnet=False):
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -24,8 +25,9 @@ def image_test(resize_size=256, crop_size=224):
     ])
 
 class ImageList(Dataset):
-    def __init__(self, image_list, labels=None, transform=None, target_transform=None, mode='RGB'
+    def __init__(self, dataset_root, image_list, labels=None, transform=None, target_transform=None, mode='RGB'
                  ,second=False):
+        self.dataset_root = dataset_root
         imgs = make_dataset(image_list, labels)
         if len(imgs) == 0:
             raise(RuntimeError("No image found !"))
@@ -42,7 +44,7 @@ class ImageList(Dataset):
     def __getitem__(self, index):
         if not self.second:
             path, target = self.imgs[index]
-            path = "/data/guxiang/dataset/" + path
+            path = os.path.join(self.dataset_root, path)
             img = self.loader(path)
             if self.transform is not None:
                 img = self.transform(img)
@@ -51,7 +53,7 @@ class ImageList(Dataset):
             return img, target
         else:
             path, label, weight, sigma = self.imgs[index]
-            path = "/data/guxiang/dataset/" + path
+            path = os.path.join(self.dataset_root, path)
             img = self.loader(path)
             if self.transform is not None:
                 img = self.transform(img)

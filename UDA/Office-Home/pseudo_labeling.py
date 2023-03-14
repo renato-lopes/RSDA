@@ -66,13 +66,13 @@ def make_list(id,pseu_label,weights,sigmas,list_path,save_path):
         fw.write(l)
         fw.write('\n')
 
-def make_new_list(source,target,iter_times=0):
-    list_path = '/data/guxiang/dataset/office-home/' + target + '.txt'
+def make_new_list(dataset_root,source,target,iter_times=0):
+    list_path = '../../data/Office-Home/' + target + '_list.txt'
     save_path = 'new_list/' + source + '_' + target + '_list.txt'
     if not os.path.exists('new_list'):
         os.mkdir('new_list')
     transform = prep.image_test(**{"resize_size": 256, "crop_size": 224})
-    dsets = ImageList(open(list_path).readlines(), transform=transform)
+    dsets = ImageList(dataset_root, open(list_path).readlines(), transform=transform)
     dloader = DataLoader(dsets, batch_size=36, shuffle=False, num_workers=4, drop_last=False)
 
     if iter_times==0:

@@ -64,16 +64,16 @@ def train(config):
     data_config = config["data"]
     train_bs = data_config["source"]["batch_size"]
     test_bs = data_config["test"]["batch_size"]
-    dsets["source"] = ImageList(open(data_config["source"]["list_path"]).readlines(), \
+    dsets["source"] = ImageList(config["dataset_root"], open(data_config["source"]["list_path"]).readlines(), \
                                 transform=prep_dict["source"])
     dset_loaders["source"] = DataLoader(dsets["source"], batch_size=train_bs, \
                                         shuffle=True, num_workers=4, drop_last=True)
-    dsets["target"] = ImageList(open('new_list/'+source+'_'+target+'_list.txt').readlines(), \
+    dsets["target"] = ImageList(config["dataset_root"], open('new_list/'+source+'_'+target+'_list.txt').readlines(), \
                                 transform=prep_dict["target"],second=True)
     dset_loaders["target"] = DataLoader(dsets["target"], batch_size=train_bs, \
                                         shuffle=True, num_workers=4, drop_last=True)
 
-    dsets["test"] = ImageList(open(data_config["test"]["list_path"]).readlines(), \
+    dsets["test"] = ImageList(config["dataset_root"], open(data_config["test"]["list_path"]).readlines(), \
                               transform=prep_dict["test"])
     dset_loaders["test"] = DataLoader(dsets["test"], batch_size=test_bs, \
                                       shuffle=False, num_workers=4)
@@ -190,7 +190,8 @@ def train(config):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Code for RSDA-MSTN')
-    parser.add_argument('--gpu_id', type=str, nargs='?', default='5', help="device id to run")
+    parser.add_argument('--dataset_root', type=str)
+    parser.add_argument('--gpu_id', type=str, nargs='?', default='0', help="device id to run")
     parser.add_argument('--source', type=str, default='Art',choices=["Art","Clipart", "Product","Real_World"])
     parser.add_argument('--target', type=str, default='Clipart', choices=["Art","Clipart", "Product","Real_World"])
     parser.add_argument('--test_interval', type=int, default=50, help="interval of two continuous test phase")
@@ -199,11 +200,12 @@ if __name__ == "__main__":
     parser.add_argument('--stages', type=int, default=5, help="training stages")
     parser.add_argument('--radius', type=float, default=20.0, help="radius")
     args = parser.parse_args()
-    s_dset_path = '/data/guxiang/dataset/office-home/' + args.source + '.txt' #'../../data/office-home/' + args.source + '.txt'
-    t_dset_path = '/data/guxiang/dataset/office-home/' + args.target + '.txt' #'../../data/office-home/' + args.target + '.txt'
+    s_dset_path = '../../data/Office-Home/' + args.source + '_list.txt'
+    t_dset_path = '../../data/Office-Home/' + args.target + '_list.txt'
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_id
     config = {}
+    config["dataset_root"] = args.dataset_root
     config["source"] = args.source
     config["target"] = args.target
     config["gpu"] = args.gpu_id
@@ -240,7 +242,7 @@ if __name__ == "__main__":
     for k in range(0,args.stages,1):
         print('time:',k)
         config["out_file"].write('\n---time:'+str(k)+'---\n')
-        pseudo_labeling.make_new_list(args.source, args.target, iter_times=k)
+        pseudo_labeling.make_new_list(args.dataset_root, args.source, args.target, iter_times=k)
         temp_acc=train(config)
         if best_acc<temp_acc:
             best_acc=temp_acc
